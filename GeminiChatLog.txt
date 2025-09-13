@@ -1,0 +1,68 @@
+Prompt to LLM:
+“I’m building a simple CSV parser in TypeScript. I can already convert each line into strings or objects.
+I’m brainstorming possible enhancements or bug fixes. Here are my initial ideas:
+
+Let users skip a row of data (missing columns).
+
+Allow unforeseen categories—parser must handle extra fields.
+
+Handle numbers with commas, e.g. 30,000.
+What other realistic improvements or tricky edge cases should I consider?”
+
+LLM Response:
+
+Add support for configurable quote characters so fields wrapped in single quotes or double quotes are correctly parsed.
+
+Allow custom delimiters (semicolon, tab, pipe) for international CSV variants.
+
+Provide a “strict mode” that throws an error when row lengths are inconsistent, and a “lenient mode” that fills missing values with null.
+
+Add streaming output (generator) so very large CSV files don’t need to be fully loaded in memory.
+
+Reflection / Step 1 Notes:
+My own ideas covered basic user mistakes and simple data quirks.
+The LLM broadened this to performance (streaming) and internationalization (custom delimiters, flexible quote characters).
+I hadn’t considered strict/lenient parsing modes, which would give users more control over error handling.
+
+Mock Chat 2
+
+Prompt to LLM:
+“I’m improving a TypeScript CSV parser. It reads a file and returns rows as arrays or objects.
+Current brainstorm: skip rows with missing columns, allow extra fields, and correctly parse 30,000.
+Please suggest advanced or less-obvious features.”
+
+LLM Response:
+
+Support for comment lines starting with # so metadata can be ignored.
+
+Auto-detection of header row and dynamic mapping of columns to object keys.
+
+Option to output a JSON schema describing the discovered column types.
+
+Detect and warn if the file uses mixed line endings (\r\n vs \n).
+
+Reflection / Step 1 Notes:
+I had focused mostly on individual field parsing.
+The LLM proposed meta-features—comment line support and automatic type inference—that target real-world data cleaning.
+I especially like the idea of mixed line-ending detection, which often causes subtle bugs.
+
+Mock Chat 3
+
+Prompt to LLM:
+“My CSV parser in TS already handles basic splitting and optional Zod validation.
+I’m thinking about: skipping rows, handling extra columns, and fields with commas.
+Could you suggest other tricky cases or enhancements that a production parser would need?”
+
+LLM Response:
+
+Implement configurable escape sequences (e.g., to handle quotes inside quoted fields).
+
+Provide progress callbacks or an event emitter for very large files so the UI can display a progress bar.
+
+Add configurable memory limits or chunk sizes for safer handling of huge datasets.
+
+Offer a ‘preview mode’ that reads only the first N rows for quick inspection.
+
+Reflection / Step 1 Notes:
+These suggestions go beyond correctness into usability and scalability (progress events, preview mode).
+I hadn’t thought about user experience when dealing with very large files, so these gave me new directions for future sprints.

@@ -68,6 +68,8 @@ I encountered a significant bug where TypeScript couldn't resolve my function's 
 #### Tests: 
 Parsing fields that contain commas by being enclosed in double quotes. Handling rows with a different number of columns than expected. Correctly processing files with empty lines or empty fields.
 #### How To… 
+Run the parser- npm run run
+Run the parser tests- npm run test
 
 #### Team members and contributions (include cs logins):
 raubrey
