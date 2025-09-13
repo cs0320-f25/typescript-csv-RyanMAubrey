@@ -1,7 +1,10 @@
 import { parseCSV } from "../src/basic-parser";
 import * as path from "path";
+import { z } from "zod";
 
 const PEOPLE_CSV_PATH = path.join(__dirname, "../data/people.csv");
+const JOB_CSV_PATH = path.join(__dirname, "../data/job.csv");
+const OTHER_CSV_PATH = path.join(__dirname, "../data/other.csv");
 
 test("parseCSV yields arrays", async () => {
   const results = await parseCSV(PEOPLE_CSV_PATH)
@@ -19,4 +22,29 @@ test("parseCSV yields only arrays", async () => {
   for(const row of results) {
     expect(Array.isArray(row)).toBe(true);
   }
+});
+
+const RowSchema = z.tuple([z.string(), z.coerce.number()]);
+
+test("it THROWS AN ERROR when a row has a non-numeric type", async () => {
+  await expect(parseCSV(OTHER_CSV_PATH, RowSchema)).rejects.toThrow();
+});
+
+/**
+ * It uses the 'other.csv' 
+ */
+test("it THROWS AN ERROR when a row has too many columns", async () => {
+  await expect(parseCSV(OTHER_CSV_PATH, RowSchema)).rejects.toThrow();
+});
+
+/**
+ * It uses the 'job.csv'
+ */
+test("it THROWS AN ERROR when a row has too few columns", async () => {
+  await expect(parseCSV(JOB_CSV_PATH, RowSchema)).rejects.toThrow();
+});
+
+test("it INCORRECTLY parses fields with quoted commas", async () => {
+  const results = await parseCSV(OTHER_CSV_PATH);
+  expect(results[0]).toEqual(['"Mallory, Alice"', 'senior developer']);
 });
