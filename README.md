@@ -71,11 +71,108 @@ Parsing fields that contain commas by being enclosed in double quotes. Handling 
 Run the parser- npm run run
 Run the parser tests- npm run test
 
+# Sprint 2: TypeScript CSV
+### Step 2
+I wrote six Jest tests:
+1. Quoted comma – checks regex1 splits incorrectly.
+2. Escaped quotes – shows 2/3/4 handle "" inside quotes.
+3. Empty middle field – proves regex1 drops empty cells.
+4. Trailing comma – shows regex2 misses the last empty cell.
+5. Embedded newline in quotes – ensures 2/3/4 keep the whole field.
+6. Whitespace around tokens – all should still find three fields.
+
+### Step 3
+regex1 – Splits inside quoted text, so "Mallory, Alice" becomes two cells.
+regex2 – Often drops the final empty cell if a line ends with a comma.
+regex3 – Captures the comma in a group so you need to clean up the match.
+regex4 – Still needs a clean-up step to remove outer quotes and turn "" into ".
+
+### Step 4
+I asked an LLM for a CSV cell regex. It gave: ("(?:""|[^"])*"|[^,\r\n]*)(?:,|$)
+Reflection: I evaluated my corectness by writing targeted tests for the tricky CSV cases like quoted commas, escaped quotes, empty middle fields, trailing empties, and embedded newlines in quotes.
+### Step 5
+I chose regex4 for my parser. It matched every test case, the groups are simple to use, and the clean up on the data is quick stripping the quots.
+
+### Code Changes (Sprint 2)
+- Switched parser to an async generator that yields one row at a time.
+- Added header support: first non-comment logical record can be used as header; it’s not returned as data; each row includes `header`.
+- Implemented robust CSV tokenization (quoted commas, "" escaping) and multi-line quoted fields.
+- Added comment skipping via optional `commentChar`.
+- Errors are yielded as structured objects `{ rowNumber, message, rawLine, zodError? }` instead of throwing; parsing continues after errors.
+- Zod schemas are supported via `safeParse`, including `.refine()` and `.brand()`.
+- Added `parseCSVFromString` for raw CSV strings, in addition to file paths.
+
+### 1340 Supplement
+1. “Give me a JavaScript/TypeScript regex that matches valid arithmetic expressions with + - * / and parentheses. Numbers can be integers or decimals. Spaces allowed. It should reject unfinished expressions and unbalanced parentheses.”
+
+“It must compile in TypeScript and work with new RegExp().”
+
+“No lookbehind or recursion—just standard JS regex.”
+
+2. “Give me a JavaScript/TypeScript regex that matches valid arithmetic expressions with + - * / and parentheses. Numbers can be integers or decimals. Spaces allowed. It should reject unfinished expressions and unbalanced parentheses.”
+
+“It must compile in TypeScript and work with new RegExp().”
+
+“No lookbehind or recursion—just standard JS regex.”
+
+3. 
+export const ARITH_REGEX =
+  /^\s*[+-]?\s*(?:\d+(?:\.\d+)?|\((?:[^()]|\([^()]*\))*\))\s*(?:[+\-*/]\s*(?:\d+(?:\.\d+)?|\((?:[^()]|\([^()]*\))*\))\s*)*$/;
+
+  Tests:
+  import { ARITH_REGEX } from "../src/arithmetic-regex"; // or inline the regex here
+
+// Comment: helpers
+const ok  = (s: string) => ARITH_REGEX.test(s);
+const bad = (s: string) => !ARITH_REGEX.test(s);
+
+describe("1340 arithmetic regex", () => {
+  test("accepts simple and spaced expressions", () => {
+    const good = [
+      "42",
+      "1+2",
+      "2 - 3 * 4",
+      "(2+5)*3",
+      "( 2 + 5 ) * 3",
+      "10 / (2 + 3*4)",
+      "((1 + 2)) * 3 - 4 / (5 + 6)", // classic example
+      "0.5 + .5 + 1"                  // dot-forms: note `.5` is NOT matched by this regex
+    ];
+    // Comment: .5 isn't matched (requires leading digit). Keep to show a miss later.
+    for (const g of good.slice(0, 6)) expect(ok(g)).toBe(true);
+  });
+
+  test("rejects unfinished or garbage", () => {
+    const bads = [
+      "3 +",          // rhs missing
+      "1 *",          // rhs missing
+      "()",           // empty parens
+      "( )",          // empty parens
+      "a + 3",        // invalid char
+      "2 + (3 * 4",   // missing ')'
+      "((1 + 2)) * 3 - 4 ) / (5 + 6)", // extra ')'
+    ];
+    for (const b of bads) expect(bad(b)).toBe(true);
+  });
+
+  test("known limitations (documented)", () => {
+    // Comment: JS regex can't truly enforce nested balance; tricky cases may slip.
+    // `.5` (leading dot) isn't matched by my numeric rule. This shows a limitation.
+    expect(ok(".5 + 1")).toBe(false); 
+    // Very deep nesting can behave inconsistently; we assert nothing here.
+  });
+});
+
+4. . It catches a lot of obvious errors but can’t guarantee balanced nesting. Allowed operator placement, allowed characters, many everyday inputs; rejects dangling operators and empty (). Missed ull parenthesis balancing and some number formats.
+
+### Reflection
+Engineering code for unknown future developers means writing clear, flexible, and well-documented components so others can safely extend or repurpose them without needing to understand every internal detail. This sprint made me focus more on readability, thorough error handling, and tests than I normally would since I thought more about how my code is used than how I want it to be used.
+
 #### Team members and contributions (include cs logins):
 raubrey
 #### Collaborators (cslogins of anyone you worked with on this project and/or generative AI): 
 Gemini 2.5 Pro
 #### Total estimated time it took to complete project: 
-4 Hours
+10 Hours
 #### Link to GitHub Repo:  
 https://github.com/cs0320-f25/typescript-csv-RyanMAubrey
